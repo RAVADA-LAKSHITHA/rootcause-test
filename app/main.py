@@ -3,6 +3,8 @@ import hmac
 import hashlib
 import os
 
+from classifier import run_and_classify
+
 app = FastAPI()
 
 GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET", "dev-secret")
@@ -32,4 +34,13 @@ async def github_webhook(request: Request):
         print(f"[push] repo={repo} commit={commit}")
         # Step for later: trigger Founder 1's deploy API here
 
+        # Simulate checking the deployed app's health after this push
+        anomaly_event = run_and_classify(["python", "simulator.py"])
+        print(f"[anomaly-check] {anomaly_event}")
+
+        if anomaly_event["anomaly"]:
+            print(f"⚠️  ANOMALY DETECTED: {anomaly_event['type']} — {anomaly_event['details']}")
+        else:
+            print("✅ No anomaly — deployment healthy")
+            
     return {"received": True}
